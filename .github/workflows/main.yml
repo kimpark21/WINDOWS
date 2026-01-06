@@ -1,4 +1,4 @@
-name: SAMP_UBUNTU_FINAL
+name: SAMP_UBUNTU_STABLE
 
 on:
   workflow_dispatch:
@@ -16,17 +16,17 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          # Install library dasar 32-bit yang wajib untuk SAMP
-          sudo apt-get install -y libc6:i386 libncurses5:i386 libstdc++6:i386 libssl1.1:i386 || sudo apt-get install -y libssl3:i386
-          # Install MariaDB/MySQL Client agar plugin MySQL .so bisa jalan
-          sudo apt-get install -y libmariadb-dev:i386 || sudo apt-get install -y libmariadb-client-lgpl-dev:i386
+          # Install library inti yang dibutuhkan oleh hampir semua plugin SAMP
+          sudo apt-get install -y libc6:i386 libncurses5:i386 libstdc++6:i386 libsqlite3-0:i386
+          # Library SSL dan MariaDB Client (versi generik)
+          sudo apt-get install -y libssl-dev:i386 libmariadb3:i386 || echo "Library tambahan opsional tidak ditemukan, lanjut..."
 
       - name: Setup & Start MySQL
         run: |
           sudo systemctl start mysql
-          # Membuat database dengan nama 'database' (sesuaikan jika perlu)
+          # Membuat database dengan nama 'database'
           sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS database;"
-          # Jika kamu punya file .sql di repo, hilangkan tanda # di bawah ini untuk import otomatis:
+          # Jika ingin import otomatis, pastikan file .sql ada di repo dan hapus tanda # di bawah:
           # sudo mysql -u root database < Database/s115_Nusantara.sql
 
       - name: Install Tailscale
@@ -43,15 +43,15 @@ jobs:
 
       - name: Start SAMP Server
         run: |
-          # Beri izin eksekusi pada file Linux SAMP
+          # Memberikan izin akses eksekusi
           chmod +x samp03svr
           chmod +x announce
           
-          echo "=== MENJALANKAN SERVER SAMP ==="
-          # Jalankan server di background agar workflow tidak stop
+          echo "=== MEMULAI SAMP SERVER ==="
+          # Menjalankan server di background
           ./samp03svr & 
           sleep 5
           
-          echo "=== MENJALANKAN TUNNEL PLAYIT ==="
-          # Playit akan berjalan di foreground untuk menjaga workflow tetap aktif
+          echo "=== KONFIGURASI PLAYIT ==="
+          # Jalankan playit untuk menjaga workflow tetap hidup
           playit
